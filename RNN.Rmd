@@ -1,28 +1,185 @@
 ---
-title: "RNN"
+Tutorial Title: "Recurrent Neural Networks"
+Authors: "Tan Peck Kee", "Max Koh Junran"
+Submission Date:
+Course Name and Number: 'Statistical and Machine Learning 40.319'
+Semester/Year: "2022 January Term"
+
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# Table of Contents
+
+# Packages Required
+```{r}
+#Also, keras installation
+
+library(keras) 
+library(deepviz)
+library(tidyverse)
 ```
 
-## R Markdown
+# Sources (To be positioned at the end)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Motivation: Weather Prediction
+Use an RNN to predict whether it will rain in Seattle given information on whether it rained or not for the previous six days.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Dataset
+- Information on the weather of Seattle for every single day between 1 January 1948 to 12 Decemeber 2017.
+- DATE: The date of the observation.
+- PRCP: Amount of Precipitation (in inches).
+- TMAX: Maximum temperature for that day (in degrees Fahrenheit).
+- TMIN: Minimum temperature for that day (in degrees Fahrenheit).
+- RAIN: Whether did it rain that day (TRUE/ FALSE).
+```{r}
+#Read dataset
+weather_data <- read.csv("seattleWeather_1948-2017.csv")
 
-```{r cars}
-summary(cars)
+# View(weather_data)
+
+head(weather_data)
 ```
 
-## Including Plots
+# Data Wrangling
+- Some pre-processing steps are needed to get our data ready to feed into our model. 
+- Moving-Block Sub-Sampling 
+- Ensuring the values in weather_matrix is numeric (as.integer)
+- Ensuring there is no NaN's in weather_matrix
 
-You can also embed plots, for example:
+```{r}
+# Rain column from weather_data
+rain <- weather_data$RAIN
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+max_len <- 6 # Number of previous days we will be looking at
+
+#Chop rain vector up into samples of (max_len +1)
+# Since we want to know whether next day would rain or not, this is to see how good we did in predicting it.
+round(length(rain)/ (max_len +1))
+#3650 examples isn't enough to train a deep learning model. 
+
+#To stretch out our data, used moving-block sub-sampling 
+move_by <- 3
+
+#First example will be n=1 to n=7, Second example will be n=4 to n=10, Third example will be n=7 to n=13 and so on.
+example1 <- rain[1:7]
+example2 <- rain[4:10]
+example3 <- rain[7:13]
+
+# Number of examples that could be obtained from using moving-block sub-sampling = 8515 examples
+# 7 + (3*no_of_examples) = length(rain)
+no_of_examples <- (length(rain)-7)/(move_by)
+no_of_examples <- round(no_of_examples)
+
+#Create an empty matrix to store the RAIN data with each row being 1 example
+weather_matrix <- matrix(nrow=no_of_examples, ncol=(max_len +1))
+
+# Fill up the weather_matrix with the 8515 examples
+# as.integer ensures the values are numeric
+for (i in 0:(no_of_examples-1) ){
+  current_example <- as.integer(rain[(1+(i*3)):(7+(i*3))])
+  weather_matrix[i+1,] <- current_example
+}
+
+
+```
+```{r}
+#Remove any NA values from weather_matrix
+weather_matrix <- na.omit(weather_matrix)
+
+#Check whether is there any NA values in weather_matrix
+anyNA(weather_matrix)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Data Preparation
+Inputs, X: The previous 6 days.
+Output, Y: The 7th day we are interested in predicting.
+```{r}
+X <- weather_matrix[,c(1:6)]
+Y <- weather_matrix[,7]
+```
+
+# Train-Test Split
+Training set: 80%
+Testing set:  20%
+Also, for X, its dimension should be 3 dimension.
+- First dimension: Number of our training examples.
+- Second dimension: Length of our input sequence = max_len.
+- Third dimension: Number of features we have.
+
+```{r}
+rowcount <- nrow(weather_matrix)
+
+set.seed(123)
+
+trainrows <- sort(sample(rowcount, rowcount*0.8))
+
+X_train <- array(X[trainrows, ], dim=c(length(trainrows), max_len, 1))
+Y_train <- Y[trainrows]
+
+X_test <- array(X[-trainrows, ], dim=c(rowcount-length(trainrows), max_len, 1))
+Y_test <- Y[-trainrows]
+
+#Check train=80% and test=20%
+nrow(X_train) / (nrow(X_train)+nrow(X_test))
+nrow(X_test) / (nrow(X_train)+nrow(X_test))
+
+
+length(Y_test)
+```
+# Recurrent Neural Network in Keras
+# Build Model
+```{r}
+model <- keras_model_sequential()
+
+model %>% layer_dense(input_shape=c(6,1), units=6)
+
+model %>% layer_simple_rnn(units=6)
+
+model %>% layer_dense(units=1, activation="sigmoid")
+
+summary(model)
+
+plot_model(model)
+
+```
+# Compile Model
+```{r}
+model %>% compile(
+  loss="binary_crossentropy",
+  optimizer="RMSprop",
+  metrics=c("accuracy"))
+```
+
+# Fit the data into the Model
+```{r}
+history <- model %>% fit(
+  x=X_train,
+  y=Y_train,
+  batch_size = 20,
+  epochs=20,
+  validation_split=0.2
+)
+
+plot(history)
+```
+
+
+
+# Predict with the trained RNN
+```{r}
+y_predicted <- model %>% predict(X_test)
+# y_predicted
+
+#Threshold = 0.5
+y_predicted <- as.integer((y_predicted > 0.5))
+
+#Confusion Matrix
+CM <- table(Y_test, y_predicted)
+CM
+
+#Test set Accuracy
+accuracy <- sum(diag(CM))/ sum(CM)
+accuracy
+```
+This model is able to predict with 70.6% accuracy whether it is going to rain or not, based on past 6 days of data. 
+
