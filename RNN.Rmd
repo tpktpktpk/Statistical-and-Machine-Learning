@@ -5,7 +5,13 @@ Submission Date:
 Course Name and Number: 'Statistical and Machine Learning 40.319'
 Semester/Year: "2022 January Term"
 
-output: html_document
+output: 
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    toc: true
+    toc_depth: 3
+    number_sections: true
 ---
 
 # Table of Contents
