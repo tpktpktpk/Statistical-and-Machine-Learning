@@ -10,6 +10,115 @@ output: html_document
 
 # Table of Contents
 
+0. hook(?)
+1. Prerequisite ideas
+2. RNN theory
+3. Example implementation
+
+
+# Prerequisite ideas
+
+So before we dive in to learning about Recurrent Neural Networks, there are two ideas we need to keep in mind. These ideas should be at least somewhat familiar to you, so we will go through them briefly. These two ideas are 1. Recurrence and 2. Neural Networks (duh)
+
+# Recurrence
+
+In computer science, recurrence can be thought of as defining a problem as an "earlier" version of itself. A simple example would be how to calculate factorials. The recursive formula for doing so can be formulated as such:
+
+$$
+n! = n \times (n-1)! \\
+(n-1)! = (n-1) \times (n-2)! \\ 
+.\\
+.\\
+.\\
+$$
+As can be seen, the calculation of $n!$ is dependent on this value of $ (n-1)! $, which is a previous "state" of the factorial, and in turn $(n-1)!$ is dependent on $(n-2)!$, all the way down to the first term. Keep in mind this idea of being dependent on the previous state.
+
+Another way to understand this idea would be the concept of Exponential smoothing
+
+Exponential smoothing is a forecasting technique whereby the prediction in the next period is dependent on the actual and predicted value of the previous period.
+
+$$
+F_{t+1} = \alpha A_t + (1- \alpha) F_t
+$$
+where $F_{t+1}$ is the forecast for the next period, and $F_t$ and $A_t$ are the forecast and actual value for the current period. $\alpha$ is simply the learning parameter influencing how much the forecasted value of the following period is affected by the forecasted value and actual value of the current period. Naturally, the forecast for the current period can then be formulated as a function of the previous period:
+$$
+F_{t} = \alpha A_{t-1} + (1- \alpha) F_{t-1}
+$$
+Finally, in general we can formulate $F_t$ as:
+
+$$
+F_{t} = \alpha A_{t-1} + (1- \alpha) F_{t-1} \\ 
+= \alpha A_{t-1} + (1- \alpha) (\alpha A_{t-2} + (1- \alpha) F_{t-2}) \\
+.\\
+.\\
+.\\
+= \alpha (A_{t-1}+(1-\alpha)^1A_{t-2}+(1-\alpha)^2A_{t-3}+...+(1-\alpha)^{t-1}A_{1}) +(1-\alpha)^tF_{0}
+$$
+As you can see, once we expand the formulation, the forecasted value for period $t$ is dependent on all values of the previous states.
+
+Bringing back the idea of recurrence being a formulation of a problem based on its previous states, we can see how exponential smoothing is a familiar example (hopefully) which you can use to understand what recurrence is. 
+
+
+# Neural networks
+
+Now lets look at the second idea we need to be familiar with: Neural networks
+
+As before, I'm assuming you have at least some familiarity with Neural Networks, so I will just be highlighting some key concepts that will be important to keep in mind.
+
+Firstly, lets revise the basic structure of a neural network:
+
+(picture of neural network)
+
+A neural network will consists of nodes and layers, each layer will have an activation function to pass their output to the next layer. This connections between the nodes and layers connects the input variables to the output variables.
+
+Input data $x$ is fed into the network to make a prediction on $\hat{y}$. The difference between the predicted $\hat{y}$ and the actual $y$ is then used to adjust the weights of the network such that the difference between the predicted and actual (otherwise called the loss) is minimized. This is how the network "learns". That said, this idea of minimizing loss is not unique to neural networks, it can be found on other machine learning algorithms such as Logistic regression or KNN.
+
+So for us, an important concept that is key to understand that is also unique to Neural networks is the idea of Forward and Backward propagation. In summary, forward propagation is how the network calculates the predicted value and hence the loss, and the backward propagation calculates the partial derivatives and hence the adjusted weights.
+
+Lets look at how its done:
+
+Forward propagation
+Using the example network, its forward calculations will be:
+$$
+
+$$
+
+Backward propagation
+For the same example network, the backward calculations will be:
+$$
+
+$$
+
+Keep in mind this idea of the logic behind forward and backward propagation (this will be useful).
+
+
+# Recurrent Neural Networks
+
+# Introduction to RNN
+Now that we have revised the prerequisite concepts of recurrence and neural networks, its time to fuse them together in a beautiful harmony to produce a Recurrent Neural Network. (how exciting!)
+
+The goal of a Recurrent neural network is to process sequential information; that is, information where the next data point is dependent on the previous data point. Examples of Sequential information includes: Words/Sentences, Time series data, etc.
+
+To make a comparison to the basic Neural Network that we looked at, the basic Neural network is not able to capture or "understand" the information in a sequence, only as distinct variables (that could possibly have dependency to one another), but not in a sequence.
+
+Here is an example of an application of RNN:
+
+(picture of google search predicting next word)
+
+As mentioned, words/sentences are an example of sequential data, and RNNs are adept at processing such information to make predictions about the next data point (in this case next word) in the sequence.
+
+# Architecture of RNN
+
+(mention recurrence)
+
+# Forward and Backward propagation
+
+(mention FBTT)
+
+# Summary of RNN
+
+(mention limitations)
+
 # Packages Required
 ```{r}
 #Also, keras installation
