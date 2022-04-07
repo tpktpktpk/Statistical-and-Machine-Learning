@@ -58,7 +58,8 @@ F_{t} = \alpha A_{t-1} + (1- \alpha) F_{t-1} \\
 .\\
 .\\
 .\\
-= \alpha (A_{t-1}+(1-\alpha)^1A_{t-2}+(1-\alpha)^2A_{t-3}+...+(1-\alpha)^{t-1}A_{1}) +(1-\alpha)^tF_{0}
+= \alpha (A_{t-1}+(1-\alpha)^1A_{t-2}+(1-\alpha)^2A_{t-3}+...+(1-\alpha)^{t-1}A_{1}) +(1-\alpha)^tF_{0}\\
+= f(A_{t-1},A_{t-2},...,A_{2},A_{1})
 $$
 As you can see, once we expand the formulation, the forecasted value for period $t$ is dependent on all values of the previous states.
 
@@ -73,29 +74,39 @@ As before, I'm assuming you have at least some familiarity with Neural Networks,
 
 Firstly, lets revise the basic structure of a neural network:
 
-(picture of neural network)
+(picture of neural network,p1)
 
 A neural network will consists of nodes and layers, each layer will have an activation function to pass their output to the next layer. This connections between the nodes and layers connects the input variables to the output variables.
 
 Input data $x$ is fed into the network to make a prediction on $\hat{y}$. The difference between the predicted $\hat{y}$ and the actual $y$ is then used to adjust the weights of the network such that the difference between the predicted and actual (otherwise called the loss) is minimized. This is how the network "learns". That said, this idea of minimizing loss is not unique to neural networks, it can be found on other machine learning algorithms such as Logistic regression or KNN.
 
-So for us, an important concept that is key to understand that is also unique to Neural networks is the idea of Forward and Backward propagation. In summary, forward propagation is how the network calculates the predicted value and hence the loss, and the backward propagation calculates the partial derivatives and hence the adjusted weights.
+So for us, an important concept that is key to understand that is also unique to Neural networks is the idea of Forward and Backward propagation. In summary, forward propagation is how the network calculates the predicted value and hence the loss, and the backward propagation calculates the partial derivatives of the loss function and hence the adjusted weights. (via gradient descent)
 
 Lets look at how its done:
 
 Forward propagation
 Using the example network, its forward calculations will be:
 $$
-
+h = f(\textbf{w}^Tx+b)\\
+y = \phi(\boldsymbol{\omega}^Th+\beta)
 $$
 
 Backward propagation
 For the same example network, the backward calculations will be:
+First lets define the loss function:
+$$
+L(\hat{y},y)=\frac1n \sum (\hat{y}-y)^2 \\
+= \frac1n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx+b)+\beta)-y)^2
+$$
+Then the partial derivatives.
+$$
+\frac{\delta L}{\delta \beta} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta) \\
+\frac{\delta L}{\delta \omega} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)f(\textbf{w}^Tx_i+b) \\
+\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)diag(w)f'(\textbf{w}^Tx_i+b) \\
+\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i+b)+\beta)x_idiag(w)f'(\textbf{w}^Tx_i+b) \\
 $$
 
-$$
-
-Keep in mind this idea of the logic behind forward and backward propagation (this will be useful).
+Keep in mind this idea of the logic behind forward and backward propagation, as well as the structure of a neural network (this will be useful).
 
 
 # Recurrent Neural Networks
@@ -109,19 +120,71 @@ To make a comparison to the basic Neural Network that we looked at, the basic Ne
 
 Here is an example of an application of RNN:
 
-(picture of google search predicting next word)
+(picture of google search predicting next word,p2)
 
 As mentioned, words/sentences are an example of sequential data, and RNNs are adept at processing such information to make predictions about the next data point (in this case next word) in the sequence.
 
+Generally, we can formulate sequential data as follows:
+
+$$
+\textbf{x} = (x(t),x(t-1),...,x(2),x(1))
+$$
+
 # Architecture of RNN
 
-(mention recurrence)
+So what does the architecture of the RNN look like? Essentially it has all the elements of a basic neural network, in addition to a recurrent layer.
 
-# Forward and Backward propagation
+Here is an illustration of a simple RNN.
 
-(mention FBTT)
+(picture of simple RNN,p3)
+
+As you can see, just like the normal neural network, it has input and output layers. The main difference then is the presence of a recurrent layer.
+
+Lets zoom in on the recurrent layer to better understand it.
+
+(picture of recurrent layer,p4)
+
+Essentially, the output of the recurrent layer is not only dependent on the input at the current time step $t$, but also dependent on the output of the previous output of at time $t-1$, and following that, the output of $t-1$ is dependent on $t-2$, and so on, bring in the idea of recurrence (which we have previously discussed), that the current formulation depends on all the previous formulation.
+
+In mathematical terms,
+
+$$
+h(t)=f^t(x(t),x(t-1),...,x(2),x(1))
+$$
+where $f$ is the activation function of the layer and $x(t)$ is the sequential data, and the function $f$ is applied $t$ times. Notice how this looks similar to the example for exponential smoothing, which means then we can formulate this into a simpler recursive expression:
+
+$$
+h(t) = f(x(t),h(t-1))
+$$
+# Forward and backward propogation
+
+Lets use a more concrete example to now explain forward and backward propagation:
+
+(picture of RNN,p5)
+
+where $x(t),y(t),h(t)$ are the input, output, hidden output at time $t$, $U,V,W$ are the weights connecting the layers, $b$ is the bias of the hidden layer, $\beta$ is the bias of the output layer. The activation function $f$ at $h$ is ReLu, and output activation $\phi$ at $y$ is Linear. 
+
+Then, the forward calculations (which hopefully you are familiar with from the basic NN) can be written as such:
+
+$$
+h(t) = f(\textbf{w}^Tx(t)+\textbf{u}^Th(t-1)+b)\\
+y(t) = \phi(\boldsymbol{\omega}^Th(t)+\beta)
+$$
+And for backward calculations, first lets define the loss function:
+
+$$
+L(\hat{y},y)=\frac1n \sum (\hat{y}-y)^2 \\
+= \frac1n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx(t)+\textbf{u}^Th(t-1)+b)+\beta)-y)^2
+$$
+Then the backward calculations:
+$$
+
+$$
 
 # Summary of RNN
+
+In conclusion, the main feature of a recurrent neural network is the presence of the recurrent architecture in the network, which takes retains the memory of previous calculations to make a calculation in the current time step. That is, for a sequential data $\textbf{x} = (x(t),x(t-1),...,x(2),x(1))$, the output $y(t)$ is affected by all of $\textbf{x}$, compared to how a basic neural network does its calculation, where the output $y_i$ is only affected by $x_i$. (so long as weights and bias do not change.)
+
 
 (mention limitations)
 
