@@ -84,6 +84,10 @@ So for us, an important concept that is key to understand that is also unique to
 
 Lets look at how its done:
 
+Here is the example network we will use to demonstrate the calculation
+
+(p1.1)
+
 Forward propagation
 Using the example network, its forward calculations will be:
 $$
@@ -127,9 +131,15 @@ As mentioned, words/sentences are an example of sequential data, and RNNs are ad
 Generally, we can formulate sequential data as follows:
 
 $$
-\textbf{x} = (x(t),x(t-1),...,x(2),x(1))
-$$
+\textbf{x}_i = (x_i(t),x_i(t-1),...,x_i(2),x_i(1)) \\
 
+\textbf{x} = \begin{pmatrix}
+x_1 \\
+x_2 \\
+\vdots \\
+x_n \\
+\end{pmatrix}
+$$
 # Architecture of RNN
 
 So what does the architecture of the RNN look like? Essentially it has all the elements of a basic neural network, in addition to a recurrent layer.
@@ -149,12 +159,12 @@ Essentially, the output of the recurrent layer is not only dependent on the inpu
 In mathematical terms,
 
 $$
-h(t)=f^t(x(t),x(t-1),...,x(2),x(1))
+h_i(t)=f^t(x_i(t),x_i(t-1),...,x_i(2),x_i(1))
 $$
 where $f$ is the activation function of the layer and $x(t)$ is the sequential data, and the function $f$ is applied $t$ times. Notice how this looks similar to the example for exponential smoothing, which means then we can formulate this into a simpler recursive expression:
 
 $$
-h(t) = f(x(t),h(t-1))
+h_i(t) = f(x_i(t),h_i(t-1))
 $$
 # Forward and backward propogation
 
@@ -167,26 +177,43 @@ where $x(t),y(t),h(t)$ are the input, output, hidden output at time $t$, $U,V,W$
 Then, the forward calculations (which hopefully you are familiar with from the basic NN) can be written as such:
 
 $$
-h(t) = f(\textbf{w}^Tx(t)+\textbf{u}^Th(t-1)+b)\\
-y(t) = \phi(\boldsymbol{\omega}^Th(t)+\beta)
+h_i(t) = f(\textbf{w}^Tx_i(t)+\textbf{u}^Th_i(t-1)+b)\\
+y_i(t) = \phi(\boldsymbol{\omega}^Th_i(t)+\beta)
 $$
+Notice the presence of a recurrent term when calculating the output of the hidden layer. This means that in order to know the output at a time step $t$, you need to have calculated the output of all previous time steps, starting from 0.
+
 And for backward calculations, first lets define the loss function:
 
 $$
-L(\hat{y},y)=\frac1n \sum (\hat{y}-y)^2 \\
-= \frac1n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx(t)+\textbf{u}^Th(t-1)+b)+\beta)-y)^2
+L(\hat{y},y)=\frac1n \sum (\hat{y}_i-y_i)^2 \\
+= \frac1n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+\textbf{u}^Th_i(t-1)+b)+\beta)-y_i)^2
 $$
 Then the backward calculations:
 $$
-
+\frac{\delta L}{\delta \beta} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta) \\
+\frac{\delta L}{\delta \omega} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)f(\textbf{w}^Tx_i(t)+b) \\
+\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)diag(w)f'(\textbf{w}^Tx_i(t)+b) \\
+\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)x_i(t)diag(w)f'(\textbf{w}^Tx_i(t)+b) \\
+\frac{\delta L}{\delta u} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)h_i(t-1)diag(w)f'(\textbf{w}^Tx_i(t)+b) \\
 $$
+Once again notice the presence of the recurrent term in the partial derivative of $\frac{\delta L}{\delta u}$, meaning that to calculate the loss and gradient of the current time step, you will need to have done the calculations in all previous time steps.
 
 # Summary of RNN
 
 In conclusion, the main feature of a recurrent neural network is the presence of the recurrent architecture in the network, which takes retains the memory of previous calculations to make a calculation in the current time step. That is, for a sequential data $\textbf{x} = (x(t),x(t-1),...,x(2),x(1))$, the output $y(t)$ is affected by all of $\textbf{x}$, compared to how a basic neural network does its calculation, where the output $y_i$ is only affected by $x_i$. (so long as weights and bias do not change.)
 
+To add on, there are a few further considerations/limitations to keep in mind for an RNN.
 
-(mention limitations)
+Firstly, because the data is sequential and the calculations (which we have went through) require to have done calculation of previous instances/time steps, an RNN is not compatible with parallel processing, meaning it might take longer than a similarly complex network to train.
+
+Secondly, the basic RNN suffers from the limitation of having "short-term memory". This is due to the possibility of gradients exploding or vanishing especially in a long sequence, causing the network to "lose memory" of previous states earlier in the sequence. That said, there are solutions to deal with this problem, like LSTM or Attention, which are more complex topics so we will have to cover that in a separate tutorial.
+
+
+# Implementation
+
+Now that we have looked at the theory behind RNN, lets move on to implementing it
+
+
 
 # Packages Required
 ```{r}
