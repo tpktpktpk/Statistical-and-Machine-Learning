@@ -84,8 +84,7 @@ So for us, an important concept that is key to understand that is also unique to
 
 Lets look at how its done:
 
-Here is the example network we will use to demonstrate the calculation
-
+Here is the detailed example network we will use to demonstrate the calculation
 (p1.1)
 
 Forward propagation
