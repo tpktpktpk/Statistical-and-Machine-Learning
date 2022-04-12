@@ -16,24 +16,32 @@ output:
 
 # Table of Contents
 
-0. hook(?)
-1. Prerequisite ideas
-2. RNN theory
-3. Example implementation
+0. Motivation: Hook
+1. Context: Prerequisite ideas
+2. Theory: RNN theory
+3. How To: Example implementation
+4. Comparing CNN and RNN for time series prediction
+5. Sources
+
+# 0. Motivation
+From Week 12 lecture, we learnt that Convolutional Neural Networks (CNN) could be used for time series prediction. However, CNN only considers the sequence within the value of **lag** specified by the coder. In this tutorial, we present Recurrent Neural Networks (RNN), which uses all of the past data to predict the future data. This benefit allows us to make prediction better with sequential data.  
 
 
-# Prerequisite ideas
+# 1. Prerequisite ideas
+So before we dive in to learning about Recurrent Neural Networks (RNN), there are two ideas we need to keep in mind. These ideas should be at least somewhat familiar to you, so we will go through them briefly. 
 
-So before we dive in to learning about Recurrent Neural Networks, there are two ideas we need to keep in mind. These ideas should be at least somewhat familiar to you, so we will go through them briefly. These two ideas are 1. Recurrence and 2. Neural Networks (duh)
+These two ideas are:
+1. Recurrence 
+2. Neural Networks 
 
-# Recurrence
 
+# 1.1 Recurrence
 In computer science, recurrence can be thought of as defining a problem as an "earlier" version of itself. A simple example would be how to calculate factorials. The recursive formula for doing so can be formulated as such:
 
 $$
 n! = n \times (n-1)! \\
 (n-1)! = (n-1) \times (n-2)! \\ 
-.\\
+(n-2)! = (n-2) \times (n-3)!\\
 .\\
 .\\
 $$
@@ -66,7 +74,7 @@ As you can see, once we expand the formulation, the forecasted value for period 
 Bringing back the idea of recurrence being a formulation of a problem based on its previous states, we can see how exponential smoothing is a familiar example (hopefully) which you can use to understand what recurrence is. 
 
 
-# Neural networks
+# 1.2 Neural networks
 
 Now lets look at the second idea we need to be familiar with: Neural networks
 
@@ -112,9 +120,9 @@ $$
 Keep in mind this idea of the logic behind forward and backward propagation, as well as the structure of a neural network (this will be useful).
 
 
-# Recurrent Neural Networks
+# 2. Recurrent Neural Networks
 
-# Introduction to RNN
+# 2.1 Introduction to RNN
 Now that we have revised the prerequisite concepts of recurrence and neural networks, its time to fuse them together in a beautiful harmony to produce a Recurrent Neural Network. (how exciting!)
 
 The goal of a Recurrent neural network is to process sequential information; that is, information where the next data point is dependent on the previous data point. Examples of Sequential information includes: Words/Sentences, Time series data, etc.
@@ -139,7 +147,7 @@ x_2 \\
 x_n \\
 \end{pmatrix}
 $$
-# Architecture of RNN
+# 2.2 Architecture of RNN
 
 So what does the architecture of the RNN look like? Essentially it has all the elements of a basic neural network, in addition to a recurrent layer.
 
@@ -165,7 +173,7 @@ where $f$ is the activation function of the layer and $x(t)$ is the sequential d
 $$
 h_i(t) = f(x_i(t),h_i(t-1))
 $$
-# Forward and backward propogation
+# 2.3 Forward and backward propogation
 
 Lets use a more concrete example to now explain forward and backward propagation:
 
@@ -197,7 +205,7 @@ $$
 $$
 Once again notice the presence of the recurrent term in the partial derivative of $\frac{\delta L}{\delta u}$, meaning that to calculate the loss and gradient of the current time step, you will need to have done the calculations in all previous time steps.
 
-# Summary of RNN
+# 2.4 Summary of RNN
 
 In conclusion, the main feature of a recurrent neural network is the presence of the recurrent architecture in the network, which takes retains the memory of previous calculations to make a calculation in the current time step. That is, for a sequential data $\textbf{x} = (x(t),x(t-1),...,x(2),x(1))$, the output $y(t)$ is affected by all of $\textbf{x}$, compared to how a basic neural network does its calculation, where the output $y_i$ is only affected by $x_i$. (so long as weights and bias do not change.)
 
@@ -208,7 +216,7 @@ Firstly, because the data is sequential and the calculations (which we have went
 Secondly, the basic RNN suffers from the limitation of having "short-term memory". This is due to the possibility of gradients exploding or vanishing especially in a long sequence, causing the network to "lose memory" of previous states earlier in the sequence. That said, there are solutions to deal with this problem, like LSTM or Attention, which are more complex topics so we will have to cover that in a separate tutorial.
 
 
-# Implementation
+# 3. Implementation
 
 Now that we have looked at the theory behind RNN, lets move on to implementing it
 
@@ -216,16 +224,12 @@ Now that we have looked at the theory behind RNN, lets move on to implementing i
 
 # Packages Required
 ```{r}
-#Also, keras installation
-
 library(keras) 
 library(deepviz)
 library(tidyverse)
 ```
 
-# Sources (To be positioned at the end)
-
-# Motivation: Weather Prediction
+# Application: Weather Prediction
 Use an RNN to predict whether it will rain in Seattle given information on whether it rained or not for the previous six days.
 
 Dataset
@@ -249,7 +253,6 @@ head(weather_data)
 - Moving-Block Sub-Sampling 
 - Ensuring the values in weather_matrix is numeric (as.integer)
 - Ensuring there is no NaN's in weather_matrix
-
 ```{r}
 # Rain column from weather_data
 rain <- weather_data$RAIN
@@ -361,13 +364,12 @@ history <- model %>% fit(
   y=Y_train,
   batch_size = 20,
   epochs=20,
-  validation_split=0.2
+  validation_split=0.2, 
+  verbose=0
 )
 
 plot(history)
 ```
-
-
 
 # Predict with the trained RNN
 ```{r}
@@ -387,3 +389,43 @@ accuracy
 ```
 This model is able to predict with 70.6% accuracy whether it is going to rain or not, based on past 6 days of data. 
 
+# 4. Comparing CNN and RNN for time series prediction
+```{r}
+model2  <-  keras_model_sequential() %>% 
+            layer_conv_1d(filters=64, kernel_size=2, strides=1, 
+                          padding='same', use_bias=TRUE, activation='relu',
+                          input_shape=c(6, 1), name='c1d') %>% 
+            layer_max_pooling_1d(pool_size=2) %>% 
+            layer_flatten() %>% 
+            layer_dense(units=50, activation='relu') %>% 
+            layer_dense(units=1, activation="sigmoid")
+
+model2 %>% compile(
+  loss="binary_crossentropy",
+  optimizer="RMSprop",
+  metrics=c("accuracy"))
+
+history2 <- fit(model2, X_train, Y_train, epochs=20, verbose=0)
+```
+
+# Predict with the trained CNN
+```{r}
+y_predicted_2 <- model2 %>% predict(X_test)
+# y_predicted
+
+#Threshold = 0.5
+y_predicted_2 <- as.integer((y_predicted_2 > 0.5))
+
+#Confusion Matrix
+CM_2 <- table(Y_test, y_predicted_2)
+CM_2
+
+#Test set Accuracy
+accuracy_2 <- sum(diag(CM_2))/ sum(CM_2)
+accuracy_2
+```
+This model is able to predict with 68.7% accuracy whether it is going to rain or not, based on past 6 days of data. 
+
+
+# 5. Sources 
+https://www.kaggle.com/rtatman/beginner-s-intro-to-rnn-s-in-r
