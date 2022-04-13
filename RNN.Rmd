@@ -25,7 +25,7 @@ output:
 6. Sources
 
 # 0. Motivation
-From Week 12 lecture, we learnt that Convolutional Neural Networks (CNN) could be used for time series prediction. However, CNN only considers the sequence within the value of **lag** specified by the coder. In this tutorial, we present Recurrent Neural Networks (RNN), which uses all of the past data to predict the future data. This benefit allows us to make prediction better with sequential data.  
+We want to introduce the concept or Recurrent Neural Networks (RNN) because of its ability to handle sequential data. An analysis that could be done with RNN is Sentiment Analysis. Sentiment Analysis allows companies to understand which of their products are well-liked or disliked through the count of positive and negative sentiments. An example would be IMDB movie reviews sentiment analysis, to understand which movies are well-liked or disliked by customers.
 
 
 # 1. Prerequisite ideas
