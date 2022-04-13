@@ -19,9 +19,10 @@ output:
 0. Motivation: Hook
 1. Context: Prerequisite ideas
 2. Theory: RNN theory
-3. How To: Example implementation
-4. Comparing CNN and RNN for time series prediction
-5. Sources
+3. How To: RNN for IMDB Sentiment Analysis
+4. How To: RNN for Weather Prediction
+5. Comparing CNN and RNN for time series prediction
+6. Sources
 
 # 0. Motivation
 From Week 12 lecture, we learnt that Convolutional Neural Networks (CNN) could be used for time series prediction. However, CNN only considers the sequence within the value of **lag** specified by the coder. In this tutorial, we present Recurrent Neural Networks (RNN), which uses all of the past data to predict the future data. This benefit allows us to make prediction better with sequential data.  
@@ -219,11 +220,117 @@ Firstly, because the data is sequential and the calculations (which we have went
 Secondly, the basic RNN suffers from the limitation of having "short-term memory". This is due to the possibility of gradients exploding or vanishing especially in a long sequence, causing the network to "lose memory" of previous states earlier in the sequence. That said, there are solutions to deal with this problem, like LSTM or Attention, which are more complex topics so we will have to cover that in a separate tutorial.
 
 
-# 3. Implementation
+# 3. How To: RNN for IMDB Sentiment Analysis
 
 Now that we have looked at the theory behind RNN, lets move on to implementing it
 
+# Install Keras
+```{r}
+# devtools::install_github("rstudio/keras")
+library(keras)
+```
 
+# Data Preprocessing
+Machine Learning Algorithms could not deal with raw text, have to convert the text into numbers before feeding it into an algorithm. The dataset we will be using for this tutorial have done this step. Changing the raw text of IMDB sentiments into numbers with a process called: **Tokenization**.
+```{r}
+#consider only the top 2,500 unique words in the dataset
+max_unique_word <- 2500
+
+# Load the dataset
+my_imdb <- dataset_imdb(num_words= max_unique_word)
+```
+
+
+# Training and Testing Datasets
+Splitting into training and testing datasets, with the training set to train our RNN model and the testing dataset to evaluate our model's accuracy.
+
+The input (x) are: Movie reviews from IMDB.They have been pre-processed into numerical vectors through a process called **Tokenization**.
+
+These input (x) also have go through a process called **Padding** or **Truncating**. This is to ensure that each movie review being fed into the model is of equal length. Since some movie reviews might be longer than the number of words we set (100), we have to truncate it or it might be shorter than the number of words we set(100), we have to pad it. 
+
+The labels (y) are: "1" for Positive and "0" for Negative sentiment.
+```{r}
+x_train <- my_imdb$train$x
+y_train <- my_imdb$train$y
+x_test <- my_imdb$test$x
+y_test <- my_imdb$test$y
+
+#Padding and Truncating Process
+
+#cut off reviews after 100 words
+max_review_len <- 100
+
+x_train <- pad_sequences(x_train, maxlen=max_review_len)
+x_test <- pad_sequences(x_test, maxlen=max_review_len)
+```
+
+```{r}
+# An Example of a Sentiment
+word_to_index <- dataset_imdb_word_index()
+index_to_word <- names(word_to_index)
+names(index_to_word) <- word_to_index
+
+
+decoded_review <- sapply(x_train[1,], function(index) {
+  word <- if (index >= 3) index_to_word[[as.character(index - 3)]]
+  if (!is.null(word)) word else "?"
+})
+
+
+
+first_sentiment_result <- y_train[1]
+
+print("An example of a sentiment would be: ")
+cat(decoded_review)
+print("================")
+print("with the sentiment of: ")
+if(first_sentiment_result==1)print("Positive Sentiment") else print("Negative Sentiment")
+```
+
+# Simple Recurrent Neural Network (RNN)
+The changes made to what we have learnt from Artificial Neural Network (ANN) lecture:
+
+**layer_embedding()** :This is used to fit an embedding layer based on the training dataset. Embedding is needed to give the categorical integers (from tokenization) to more meaningful representations. The word embedding captures the inherited relationship of words and dramatically reduces the input dimension (128 dims). 
+
+**layer_simple_rnn()** : This is used to add a simple RNN layer. This layer encapsulates what we have explained earlier namely Recurrence + Neural Networks. 
+
+```{r}
+#Build the RNN Model
+rnn_model <- keras_model_sequential()
+rnn_model %>% 
+  layer_embedding(input_dim = max_unique_word, output_dim=128) %>% 
+  layer_simple_rnn(units=64, dropout=0.2, recurrent_dropout=0.2) %>% 
+  layer_dense(units=1, activation="sigmoid")
+```
+
+
+```{r}
+#Compile the RNN Model
+rnn_model %>% compile(
+  loss="binary_crossentropy",
+  optimizer="adam",
+  metrics=c("accuracy")
+)
+
+```
+
+```{r}
+#Fitting the RNN Model
+rnn_history <- rnn_model %>%  fit(
+  x_train, y_train,
+  batch_size= 128,
+  epochs=5,
+  validation_split=0.2,
+  verbose=0
+)
+```
+```{r}
+#Evaluate the RNN Model
+rnn_model %>% 
+  evaluate(x_test, y_test)
+```
+
+# 4. How To: RNN for Weather Prediction
 
 # Packages Required
 ```{r}
@@ -392,7 +499,7 @@ accuracy
 ```
 This model is able to predict with 70.6% accuracy whether it is going to rain or not, based on past 6 days of data. 
 
-# 4. Comparing CNN and RNN for time series prediction
+# 5. Comparing CNN and RNN for time series prediction
 ```{r}
 model2  <-  keras_model_sequential() %>% 
             layer_conv_1d(filters=64, kernel_size=2, strides=1, 
@@ -430,5 +537,11 @@ accuracy_2
 This model is able to predict with 68.7% accuracy whether it is going to rain or not, based on past 6 days of data. 
 
 
-# 5. Sources 
-https://www.kaggle.com/rtatman/beginner-s-intro-to-rnn-s-in-r
+# 6. Sources 
+
+Weather Prediction: 1. https://www.kaggle.com/rtatman/beginner-s-intro-to-rnn-s-in-r
+
+IMDB Sentiment Analysis:
+1. http://ai.stanford.edu/~amaas/data/sentiment/
+2. https://scientistcafe.com/ids/r/ch12rnn#Overview_for_IMDB_Dataset
+3. https://rstudio-pubs-static.s3.amazonaws.com/486604_46a03b6e83204318bb3d13dad87c10e2.html
