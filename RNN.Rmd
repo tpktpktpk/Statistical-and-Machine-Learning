@@ -98,9 +98,10 @@ Here is the detailed example network we will use to demonstrate the calculation
 Forward propagation
 Using the example network, its forward calculations will be:
 $$
-h = f(\textbf{w}^Tx+b)\\
-y = \phi(\boldsymbol{\omega}^Th+\beta)
+h = f(\textbf{w}^Tx+b^T)\\
+y = \phi(\boldsymbol{\omega}h+\beta)
 $$
+(note that $h$ is a 3x1 column vector, and the weights and bias $w,\omega,b$ are row vectors 1x3)
 
 Backward propagation
 For the same example network, the backward calculations will be:
@@ -168,7 +169,7 @@ In mathematical terms,
 $$
 h_i(t)=f^t(x_i(t),x_i(t-1),...,x_i(2),x_i(1))
 $$
-where $f$ is the activation function of the layer and $x(t)$ is the sequential data, and the function $f$ is applied $t$ times. Notice how this looks similar to the example for exponential smoothing, which means then we can formulate this into a simpler recursive expression:
+where $f$ is the activation function of the layer and $x(t)$ is the sequential data, and the function $f$ is applied $t$ times. Notice how this looks similar to the expression in the example for exponential smoothing, which means then we can formulate this into a simpler recursive expression:
 
 $$
 h_i(t) = f(x_i(t),h_i(t-1))
@@ -179,29 +180,31 @@ Lets use a more concrete example to now explain forward and backward propagation
 
 (picture of RNN,p5)
 
-where $x(t),y(t),h(t)$ are the input, output, hidden output at time $t$, $U,V,W$ are the weights connecting the layers, $b$ is the bias of the hidden layer, $\beta$ is the bias of the output layer. The activation function $f$ at $h$ is ReLu, and output activation $\phi$ at $y$ is Linear. 
+where $x(t),y(t),h(t)$ are the input, output, hidden output at time $t$, $u,w,\omega$ are the weights connecting the layers, $b$ is the bias of the hidden layer, $\beta$ is the bias of the output layer. The activation function $f$ at $h$ is ReLu, and output activation $\phi$ at $y$ is Linear. Notice the difference between this example and the previous basic neural network example is the inclusion of the weights $u$ attached to the output from a previous time step. 
 
 Then, the forward calculations (which hopefully you are familiar with from the basic NN) can be written as such:
 
 $$
-h_i(t) = f(\textbf{w}^Tx_i(t)+\textbf{u}^Th_i(t-1)+b)\\
-y_i(t) = \phi(\boldsymbol{\omega}^Th_i(t)+\beta)
+h_i(t) = f(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b^T)\\
+y_i(t) = \phi(\boldsymbol{\omega}h_i(t)+\beta)
 $$
+(note that $h_i(.)$ is a 3x1 column vector, and the weights and bias $u,w,\omega,b$ are row vectors 1x3)
+
 Notice the presence of a recurrent term when calculating the output of the hidden layer. This means that in order to know the output at a time step $t$, you need to have calculated the output of all previous time steps, starting from 0.
 
 And for backward calculations, first lets define the loss function:
 
 $$
 L(\hat{y},y)=\frac1n \sum (\hat{y}_i-y_i)^2 \\
-= \frac1n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+\textbf{u}^Th_i(t-1)+b)+\beta)-y_i)^2
+= \frac1n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+\beta)-y_i)^2
 $$
 Then the backward calculations:
 $$
-\frac{\delta L}{\delta \beta} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta) \\
-\frac{\delta L}{\delta \omega} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)f(\textbf{w}^Tx_i(t)+b) \\
-\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)diag(w)f'(\textbf{w}^Tx_i(t)+b) \\
-\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)x_i(t)diag(w)f'(\textbf{w}^Tx_i(t)+b) \\
-\frac{\delta L}{\delta u} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+b)+\beta)h_i(t-1)diag(w)f'(\textbf{w}^Tx_i(t)+b) \\
+\frac{\delta L}{\delta \beta} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta) \\
+\frac{\delta L}{\delta \omega} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)f(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b) \\
+\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)diag(w)f'(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b) \\
+\frac{\delta L}{\delta b} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)x_i(t)diag(w)f'(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b) \\
+\frac{\delta L}{\delta u} = \frac2n \sum (\phi(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)-y) \phi'(\boldsymbol{\omega}^Tf(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b)+\beta)diag(h_i(t-1))diag(w)f'(\textbf{w}^Tx_i(t)+diag(h_i(t-1))\textbf{u}^T+b) \\
 $$
 Once again notice the presence of the recurrent term in the partial derivative of $\frac{\delta L}{\delta u}$, meaning that to calculate the loss and gradient of the current time step, you will need to have done the calculations in all previous time steps.
 
