@@ -1,10 +1,7 @@
 ---
-Tutorial Title: "Recurrent Neural Networks"
-Authors: "Tan Peck Kee", "Max Koh Junran"
-Submission Date:
-Course Name and Number: 'Statistical and Machine Learning 40.319'
-Semester/Year: "2022 January Term"
-
+title: "Recurrent Neural Networks, Statistical and Machine Learning 40.319"
+author: "Tan Peck Kee, Max Koh Junran"
+date: "2022 January Term, 18 April 2022"
 output: 
   prettydoc::html_pretty:
     theme: cayman
@@ -13,6 +10,12 @@ output:
     toc_depth: 3
     number_sections: true
 ---
+# Header 
+1. Tutorial title: Recurrent Neural Networks
+2. Authors: Tan Peck Kee, Max Koh Junran
+3. Submission date: 18 April 2022
+4. Course Name and Number: Statistical and Machine Learning 40.319
+5. Semester/Year: 2022 January Term
 
 # Table of Contents
 
@@ -20,15 +23,20 @@ output:
 1. Context: Prerequisite ideas
 2. Theory: RNN theory
 3. How To: RNN for IMDB Sentiment Analysis
-4. How To: RNN for Weather Prediction
-5. Comparing CNN and RNN for time series prediction
+4: How To: LSTM for IMDB Sentiment Analysis
 6. Sources
 
-# 0. Motivation
-We want to introduce the concept or Recurrent Neural Networks (RNN) because of its ability to handle sequential data. An analysis that could be done with RNN is Sentiment Analysis. Sentiment Analysis allows companies to understand which of their products are well-liked or disliked through the count of positive and negative sentiments. An example would be IMDB movie reviews sentiment analysis, to understand which movies are well-liked or disliked by customers.
 
 
-# 1. Prerequisite ideas
+# Motivation: Hook
+With the vast number of movie reviews posted online, it is not possible for someone to manually analyze all of the movie reviews. Thus, we want to automate the analysis of movie reviews. For example, predicting the level of sentiment based on the review within a range (-1 , 1). 
+
+A naive approach would be to check for occurrence of keywords, such as "great" being associated with positive review and "bad" being associated with negative review. One would recognize "This is a **great** movie!" to be a positive review. 
+
+However, within a sentence, there is context! For example: "The popcorn was **great**!". With our naive approach, we would consider this movie review to be positive. However, as a human would read it, it is referring to the popcorn and not the movie. This established that Sentiment Analysis requires a method that captures context and sequences. Thus, we want to introduce the idea of Recurrent Neural Networks, which is known for handling sequential data for this task. 
+
+
+# Context: Prerequisite ideas
 So before we dive in to learning about Recurrent Neural Networks (RNN), there are two ideas we need to keep in mind. These ideas should be at least somewhat familiar to you, so we will go through them briefly. 
 
 These two ideas are:
@@ -36,7 +44,7 @@ These two ideas are:
 2. Neural Networks 
 
 
-# 1.1 Recurrence
+## Recurrence
 In computer science, recurrence can be thought of as defining a problem as an "earlier" version of itself. A simple example would be how to calculate factorials. The recursive formula for doing so can be formulated as such:
 
 $$
@@ -75,7 +83,7 @@ As you can see, once we expand the formulation, the forecasted value for period 
 Bringing back the idea of recurrence being a formulation of a problem based on its previous states, we can see how exponential smoothing is a familiar example (hopefully) which you can use to understand what recurrence is. 
 
 
-# 1.2 Neural networks
+## Neural networks
 
 Now lets look at the second idea we need to be familiar with: Neural networks
 
@@ -83,7 +91,7 @@ As before, I'm assuming you have at least some familiarity with Neural Networks,
 
 Firstly, lets revise the basic structure of a neural network:
 
-(picture of neural network,p1)
+![Neural Network](Images/Slide1.png)
 
 A neural network will consists of nodes and layers, each layer will have an activation function to pass their output to the next layer. This connections between the nodes and layers connects the input variables to the output variables.
 
@@ -94,7 +102,8 @@ So for us, an important concept that is key to understand that is also unique to
 Lets look at how its done:
 
 Here is the detailed example network we will use to demonstrate the calculation
-(p1.1)
+
+![Neural Network](Images/Slide2.png)
 
 Forward propagation
 Using the example network, its forward calculations will be:
@@ -122,9 +131,9 @@ $$
 Keep in mind this idea of the logic behind forward and backward propagation, as well as the structure of a neural network (this will be useful).
 
 
-# 2. Recurrent Neural Networks
+# Theory: RNN theory
 
-# 2.1 Introduction to RNN
+## Introduction to RNN
 Now that we have revised the prerequisite concepts of recurrence and neural networks, its time to fuse them together in a beautiful harmony to produce a Recurrent Neural Network. (how exciting!)
 
 The goal of a Recurrent neural network is to process sequential information; that is, information where the next data point is dependent on the previous data point. Examples of Sequential information includes: Words/Sentences, Time series data, etc.
@@ -133,7 +142,7 @@ To make a comparison to the basic Neural Network that we looked at, the basic Ne
 
 Here is an example of an application of RNN:
 
-(picture of google search predicting next word,p2)
+![Google Search](Images/Slide3.png)
 
 As mentioned, words/sentences are an example of sequential data, and RNNs are adept at processing such information to make predictions about the next data point (in this case next word) in the sequence.
 
@@ -149,19 +158,19 @@ x_2 \\
 x_n \\
 \end{pmatrix}
 $$
-# 2.2 Architecture of RNN
+## Architecture of RNN
 
 So what does the architecture of the RNN look like? Essentially it has all the elements of a basic neural network, in addition to a recurrent layer.
 
 Here is an illustration of a simple RNN.
 
-(picture of simple RNN,p3)
+![Simple Recurrent Neural Network](Images/Slide4.png)
 
 As you can see, just like the normal neural network, it has input and output layers. The main difference then is the presence of a recurrent layer.
 
 Lets zoom in on the recurrent layer to better understand it.
 
-(picture of recurrent layer,p4)
+![Recurrent Neural Network](Images/Slide5.png)
 
 Essentially, the output of the recurrent layer is not only dependent on the input at the current time step $t$, but also dependent on the output of the previous output of at time $t-1$, and following that, the output of $t-1$ is dependent on $t-2$, and so on, bring in the idea of recurrence (which we have previously discussed), that the current formulation depends on all the previous formulation.
 
@@ -175,11 +184,11 @@ where $f$ is the activation function of the layer and $x(t)$ is the sequential d
 $$
 h_i(t) = f(x_i(t),h_i(t-1))
 $$
-# 2.3 Forward and backward propogation
+## Forward and backward propogation
 
 Lets use a more concrete example to now explain forward and backward propagation:
 
-(picture of RNN,p5)
+![Recurrent Neural Network](Images/Slide6.png)
 
 where $x(t),y(t),h(t)$ are the input, output, hidden output at time $t$, $u,w,\omega$ are the weights connecting the layers, $b$ is the bias of the hidden layer, $\beta$ is the bias of the output layer. The activation function $f$ at $h$ is ReLu, and output activation $\phi$ at $y$ is Linear. Notice the difference between this example and the previous basic neural network example is the inclusion of the weights $u$ attached to the output from a previous time step. 
 
@@ -209,7 +218,7 @@ $$
 $$
 Once again notice the presence of the recurrent term in the partial derivative of $\frac{\delta L}{\delta u}$, meaning that to calculate the loss and gradient of the current time step, you will need to have done the calculations in all previous time steps.
 
-# 2.4 Summary of RNN
+## Summary of RNN
 
 In conclusion, the main feature of a recurrent neural network is the presence of the recurrent architecture in the network, which takes retains the memory of previous calculations to make a calculation in the current time step. That is, for a sequential data $\textbf{x} = (x(t),x(t-1),...,x(2),x(1))$, the output $y(t)$ is affected by all of $\textbf{x}$, compared to how a basic neural network does its calculation, where the output $y_i$ is only affected by $x_i$. (so long as weights and bias do not change.)
 
@@ -220,18 +229,22 @@ Firstly, because the data is sequential and the calculations (which we have went
 Secondly, the basic RNN suffers from the limitation of having "short-term memory". This is due to the possibility of gradients exploding or vanishing especially in a long sequence, causing the network to "lose memory" of previous states earlier in the sequence. That said, there are solutions to deal with this problem, like LSTM or Attention, which are more complex topics so we will have to cover that in a separate tutorial.
 
 
-# 3. How To: RNN for IMDB Sentiment Analysis
+# How To: RNN for IMDB Sentiment Analysis
 
-Now that we have looked at the theory behind RNN, lets move on to implementing it
+Now that we have looked at the theory behind RNN, lets move on to implementing it.
 
-# Install Keras
+Since we have motivated the problem of sentiment analysis, we will be analyzing movie reviews from IMDB, which houses numerous movie reviews online. 
+
+
+## Install Keras
+For this analysis, we need **keras** library.
 ```{r}
 # devtools::install_github("rstudio/keras")
 library(keras)
 ```
 
-# Data Preprocessing
-Machine Learning Algorithms could not deal with raw text, have to convert the text into numbers before feeding it into an algorithm. The dataset we will be using for this tutorial have done this step. Changing the raw text of IMDB sentiments into numbers with a process called: **Tokenization**.
+## Data Preprocessing
+Machine Learning Algorithms could not deal with raw text. Therefore, we have to convert the text into numbers before feeding it into an algorithm. The dataset we will be using for this tutorial have done this step. Changing the raw text of IMDB sentiments into numbers with a process called: **Tokenization**.
 ```{r}
 #consider only the top 2,500 unique words in the dataset
 max_unique_word <- 2500
@@ -241,7 +254,7 @@ my_imdb <- dataset_imdb(num_words= max_unique_word)
 ```
 
 
-# Training and Testing Datasets
+## Training and Testing Datasets
 Splitting into training and testing datasets, with the training set to train our RNN model and the testing dataset to evaluate our model's accuracy.
 
 The input (x) are: Movie reviews from IMDB.They have been pre-processed into numerical vectors through a process called **Tokenization**.
@@ -264,8 +277,9 @@ x_train <- pad_sequences(x_train, maxlen=max_review_len)
 x_test <- pad_sequences(x_test, maxlen=max_review_len)
 ```
 
+## An example of a movie review looks like:
 ```{r}
-# An Example of a Sentiment
+# An Example of a review
 word_to_index <- dataset_imdb_word_index()
 index_to_word <- names(word_to_index)
 names(index_to_word) <- word_to_index
@@ -280,17 +294,19 @@ decoded_review <- sapply(x_train[1,], function(index) {
 
 first_sentiment_result <- y_train[1]
 
-print("An example of a sentiment would be: ")
 cat(decoded_review)
-print("================")
-print("with the sentiment of: ")
+```
+
+The above movie review is of sentiment:
+```{r}
 if(first_sentiment_result==1)print("Positive Sentiment") else print("Negative Sentiment")
 ```
 
-# Simple Recurrent Neural Network (RNN)
-The changes made to what we have learnt from Artificial Neural Network (ANN) lecture:
 
-**layer_embedding()** :This is used to fit an embedding layer based on the training dataset. Embedding is needed to give the categorical integers (from tokenization) to more meaningful representations. The word embedding captures the inherited relationship of words and dramatically reduces the input dimension (128 dims). 
+## Simple Recurrent Neural Network (RNN)
+Building the RNN model is different from Neural Network. With two changes made to what we have learnt from Artificial Neural Network (ANN) lecture:
+
+**layer_embedding()** :This is used to fit an embedding layer based on the training dataset. Embedding is needed to give the categorical integers (from tokenization) to more meaningful representations. The word embedding captures the inherited relationship of words and dramatically reduces the input dimension (128 dims). This step is needed as tokenization is a naive mapping of words to numbers. With embedding, the converted input would have meaning amongst the numbers.
 
 **layer_simple_rnn()** : This is used to add a simple RNN layer. This layer encapsulates what we have explained earlier namely Recurrence + Neural Networks. 
 
@@ -324,222 +340,63 @@ rnn_history <- rnn_model %>%  fit(
   verbose=0
 )
 ```
+
 ```{r}
 #Evaluate the RNN Model
 rnn_model %>% 
   evaluate(x_test, y_test)
 ```
+Our simple RNN model achieved an accuracy of: 71.3%
 
-# 4. How To: RNN for Weather Prediction
 
-# Packages Required
+# How To: LSTM for IMDB Sentiment Analysis
+The performance of RNN might not be good in terms of long-term dependencies. This is because of the way it updates the partial derivatives through  Back Propagation Through Time (BPTT), the values would be small for much earlier words compared to the current word.  
+
+Due to this locality disadvantage within RNN, an improvement to this would be to use Long Short Term Memory RNN model (LSTM), which would perform better than RNN by carrying useful information from the earlier words to the later words. 
+
 ```{r}
-library(keras) 
-library(deepviz)
-library(tidyverse)
+#Build the LSTM Model
+lstm_model <- keras_model_sequential()
+
+lstm_model %>%
+  layer_embedding(input_dim = max_unique_word, output_dim = 128) %>% 
+  layer_lstm(units = 64, dropout = 0.2, recurrent_dropout = 0.2) %>% 
+  layer_dense(units = 1, activation = 'sigmoid')
+
 ```
 
-# Application: Weather Prediction
-Use an RNN to predict whether it will rain in Seattle given information on whether it rained or not for the previous six days.
-
-Dataset
-- Information on the weather of Seattle for every single day between 1 January 1948 to 12 Decemeber 2017.
-- DATE: The date of the observation.
-- PRCP: Amount of Precipitation (in inches).
-- TMAX: Maximum temperature for that day (in degrees Fahrenheit).
-- TMIN: Minimum temperature for that day (in degrees Fahrenheit).
-- RAIN: Whether did it rain that day (TRUE/ FALSE).
 ```{r}
-#Read dataset
-weather_data <- read.csv("seattleWeather_1948-2017.csv")
-
-# View(weather_data)
-
-head(weather_data)
+#Compile the LSTM Model
+lstm_model %>% compile(
+  loss = 'binary_crossentropy',
+  optimizer = 'adam',
+  metrics = c('accuracy')
+)
 ```
 
-# Data Wrangling
-- Some pre-processing steps are needed to get our data ready to feed into our model. 
-- Moving-Block Sub-Sampling 
-- Ensuring the values in weather_matrix is numeric (as.integer)
-- Ensuring there is no NaN's in weather_matrix
 ```{r}
-# Rain column from weather_data
-rain <- weather_data$RAIN
+#Fitting the LSTM Model
+batch_size = 128
+epochs = 5
+validation_split = 0.2
 
-max_len <- 6 # Number of previous days we will be looking at
-
-#Chop rain vector up into samples of (max_len +1)
-# Since we want to know whether next day would rain or not, this is to see how good we did in predicting it.
-round(length(rain)/ (max_len +1))
-#3650 examples isn't enough to train a deep learning model. 
-
-#To stretch out our data, used moving-block sub-sampling 
-move_by <- 3
-
-#First example will be n=1 to n=7, Second example will be n=4 to n=10, Third example will be n=7 to n=13 and so on.
-example1 <- rain[1:7]
-example2 <- rain[4:10]
-example3 <- rain[7:13]
-
-# Number of examples that could be obtained from using moving-block sub-sampling = 8515 examples
-# 7 + (3*no_of_examples) = length(rain)
-no_of_examples <- (length(rain)-7)/(move_by)
-no_of_examples <- round(no_of_examples)
-
-#Create an empty matrix to store the RAIN data with each row being 1 example
-weather_matrix <- matrix(nrow=no_of_examples, ncol=(max_len +1))
-
-# Fill up the weather_matrix with the 8515 examples
-# as.integer ensures the values are numeric
-for (i in 0:(no_of_examples-1) ){
-  current_example <- as.integer(rain[(1+(i*3)):(7+(i*3))])
-  weather_matrix[i+1,] <- current_example
-}
-
-
-```
-```{r}
-#Remove any NA values from weather_matrix
-weather_matrix <- na.omit(weather_matrix)
-
-#Check whether is there any NA values in weather_matrix
-anyNA(weather_matrix)
-```
-
-# Data Preparation
-Inputs, X: The previous 6 days.
-Output, Y: The 7th day we are interested in predicting.
-```{r}
-X <- weather_matrix[,c(1:6)]
-Y <- weather_matrix[,7]
-```
-
-# Train-Test Split
-Training set: 80%
-Testing set:  20%
-Also, for X, its dimension should be 3 dimension.
-- First dimension: Number of our training examples.
-- Second dimension: Length of our input sequence = max_len.
-- Third dimension: Number of features we have.
-
-```{r}
-rowcount <- nrow(weather_matrix)
-
-set.seed(123)
-
-trainrows <- sort(sample(rowcount, rowcount*0.8))
-
-X_train <- array(X[trainrows, ], dim=c(length(trainrows), max_len, 1))
-Y_train <- Y[trainrows]
-
-X_test <- array(X[-trainrows, ], dim=c(rowcount-length(trainrows), max_len, 1))
-Y_test <- Y[-trainrows]
-
-#Check train=80% and test=20%
-nrow(X_train) / (nrow(X_train)+nrow(X_test))
-nrow(X_test) / (nrow(X_train)+nrow(X_test))
-
-
-length(Y_test)
-```
-# Recurrent Neural Network in Keras
-# Build Model
-```{r}
-model <- keras_model_sequential()
-
-model %>% layer_dense(input_shape=c(6,1), units=6)
-
-model %>% layer_simple_rnn(units=6)
-
-model %>% layer_dense(units=1, activation="sigmoid")
-
-summary(model)
-
-plot_model(model)
-
-```
-# Compile Model
-```{r}
-model %>% compile(
-  loss="binary_crossentropy",
-  optimizer="RMSprop",
-  metrics=c("accuracy"))
-```
-
-# Fit the data into the Model
-```{r}
-history <- model %>% fit(
-  x=X_train,
-  y=Y_train,
-  batch_size = 20,
-  epochs=20,
-  validation_split=0.2, 
+lstm_history <- lstm_model %>% fit(
+  x_train, y_train,
+  batch_size = batch_size,
+  epochs = epochs,
+  validation_split = validation_split,
   verbose=0
 )
-
-plot(history)
 ```
 
-# Predict with the trained RNN
 ```{r}
-y_predicted <- model %>% predict(X_test)
-# y_predicted
-
-#Threshold = 0.5
-y_predicted <- as.integer((y_predicted > 0.5))
-
-#Confusion Matrix
-CM <- table(Y_test, y_predicted)
-CM
-
-#Test set Accuracy
-accuracy <- sum(diag(CM))/ sum(CM)
-accuracy
+#Evaluate the LSTM Model
+lstm_model %>% 
+   evaluate(x_test, y_test)
 ```
-This model is able to predict with 70.6% accuracy whether it is going to rain or not, based on past 6 days of data. 
+Here we see that LSTM performs much better than RNN scoring an accuracy of : 83.6%
 
-# 5. Comparing CNN and RNN for time series prediction
-```{r}
-model2  <-  keras_model_sequential() %>% 
-            layer_conv_1d(filters=64, kernel_size=2, strides=1, 
-                          padding='same', use_bias=TRUE, activation='relu',
-                          input_shape=c(6, 1), name='c1d') %>% 
-            layer_max_pooling_1d(pool_size=2) %>% 
-            layer_flatten() %>% 
-            layer_dense(units=50, activation='relu') %>% 
-            layer_dense(units=1, activation="sigmoid")
-
-model2 %>% compile(
-  loss="binary_crossentropy",
-  optimizer="RMSprop",
-  metrics=c("accuracy"))
-
-history2 <- fit(model2, X_train, Y_train, epochs=20, verbose=0)
-```
-
-# Predict with the trained CNN
-```{r}
-y_predicted_2 <- model2 %>% predict(X_test)
-# y_predicted
-
-#Threshold = 0.5
-y_predicted_2 <- as.integer((y_predicted_2 > 0.5))
-
-#Confusion Matrix
-CM_2 <- table(Y_test, y_predicted_2)
-CM_2
-
-#Test set Accuracy
-accuracy_2 <- sum(diag(CM_2))/ sum(CM_2)
-accuracy_2
-```
-This model is able to predict with 68.7% accuracy whether it is going to rain or not, based on past 6 days of data. 
-
-
-# 6. Sources 
-
-Weather Prediction: 1. https://www.kaggle.com/rtatman/beginner-s-intro-to-rnn-s-in-r
+# Sources 
 
 IMDB Sentiment Analysis:
 1. http://ai.stanford.edu/~amaas/data/sentiment/
