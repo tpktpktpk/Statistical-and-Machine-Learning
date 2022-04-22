@@ -22,8 +22,8 @@ output:
 1. Context: Prerequisite ideas
 2. Theory: RNN theory
 3. How To: RNN for IMDB Sentiment Analysis
-4: How To: LSTM for IMDB Sentiment Analysis
-6. Sources
+4. How To: LSTM for IMDB Sentiment Analysis
+5. Sources
 
 # Packages Required 
 For this analysis, we need **keras** library.
@@ -192,6 +192,7 @@ where $f$ is the activation function of the layer and $x(t)$ is the sequential d
 $$
 h_i(t) = f(x_i(t),h_i(t-1))
 $$
+
 ## Forward and backward propogation
 
 Lets use a more concrete example to now explain forward and backward propagation:
@@ -285,7 +286,7 @@ x_train <- pad_sequences(x_train, maxlen=max_review_len)
 x_test <- pad_sequences(x_test, maxlen=max_review_len)
 ```
 
-## An example of a movie review looks like
+## An example of a movie review
 ```{r}
 # An Example of a review
 word_to_index <- dataset_imdb_word_index()
